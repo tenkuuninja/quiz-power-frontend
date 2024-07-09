@@ -1,0 +1,10 @@
+@import "./base/font.scss";
+@layer tailwind-base {
+  @import "./base/reset.scss";
+}
+@import "./lib/primevue.scss";
+@import "./lib/tailwind.scss";
+@import "./lib/react-toastify.scss";
+@import "./lib//primeicon.scss";
+
+@import "./global.scss";

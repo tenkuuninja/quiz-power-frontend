@@ -1,0 +1,18 @@
+@import "primevue/resources/themes/aura-light-amber/theme.css";
+
+.p-toast {
+  .p-toast-message {
+    .p-toast-message-content {
+      border-width: 0;
+
+      .p-toast-detail {
+        margin-top: 0;
+      }
+    }
+  }
+}
+
+.p-confirm-dialog {
+  width: 480px;
+  max-width: 90%;
+}

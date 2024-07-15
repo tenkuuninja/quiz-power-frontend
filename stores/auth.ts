@@ -1,6 +1,6 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia'
 
-export const useAuthStore = defineStore("auth", {
+export const useAuthStore = defineStore('auth', {
   state: () => ({
     isInitialized: false,
     isAuthenticated: false,
@@ -8,17 +8,18 @@ export const useAuthStore = defineStore("auth", {
   }),
   actions: {
     setAuthProfile(profile: any) {
-      this.isInitialized = true;
-      this.isAuthenticated = true;
-      this.profile = profile;
+      this.isInitialized = true
+      this.isAuthenticated = true
+      this.profile = profile
     },
     removeAuth() {
-      this.isInitialized = true;
-      this.isAuthenticated = false;
-      this.profile = null;
+      this.isInitialized = true
+      this.isAuthenticated = false
+      this.profile = null
+      localStorage.removeItem('quiz-token')
     },
   },
   getters: {
     // doubleCounter: (state) => state.counter * 2,
   },
-});
+})

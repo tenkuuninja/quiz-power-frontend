@@ -62,9 +62,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4 bg-slate-900 min-h-[calc(100vh-72px)]">
+  <div class="p-4 bg-slate-100 min-h-[calc(100vh-72px)]">
     <div
-      class="min-h-[400px] p-[16px] rounded-[16px] bg-primary-500/5 text-white text-[32px] text-center flex justify-center items-center"
+      class="min-h-[400px] p-[16px] rounded-[16px] bg-primary-100/30 text-black text-[32px] text-center flex justify-center items-center"
     >
       {{ currentQuestion?.content }}
     </div>

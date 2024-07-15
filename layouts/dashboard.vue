@@ -1,12 +1,12 @@
 <template>
-  <DashboardLayoutNavBar></DashboardLayoutNavBar>
+  <DashboardLayoutHeader />
   <div
-    class="md:fixed left-0 h-[calc(100vh-80px)] top-[80px] w-[240px] md:z-20 bg-white p-6 border-r border-gray-300"
+    class="left-0 top-[81px] h-[calc(100vh-81px)] w-[240px] border-r border-gray-300 bg-white md:fixed md:z-20"
   >
     <DashboardLayoutSideBar />
   </div>
-  <div class="pl-[240px] mt-[80px]">
-    <div class="bg-gray-100 min-h-[calc(100vh-80px)] p-[20px]">
+  <div class="pl-[240px]">
+    <div class="min-h-[calc(100vh-80px)] bg-gray-100 p-[20px]">
       <slot />
     </div>
   </div>

@@ -45,7 +45,7 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="fixed top-0 left-0 w-full bg-black/70 backdrop-blur z-[10]">
+  <div class="fixed top-0 left-0 w-full bg-slate-900 backdrop-blur z-[10]">
     <div
       class="container h-[72px] flex items-center justify-between space-x-[16px]"
     >

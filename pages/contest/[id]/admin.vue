@@ -34,7 +34,7 @@ watch([contest], ([newContest], [oldContest]) => {
 <template>
   <ContestSubscribeSocketEvent />
   <ContestLoadingWrapper>
-    <div class="bg-[url(/assets/contest/wallpaper-1.jpg)] bg-fixed bg-cover">
+    <div class="bg-primary-50">
       <div class="bg-black/10 min-h-screen">
         <ContestAdminHeader :contestId="contestId" />
         <ContestAdminWaitingPlayer

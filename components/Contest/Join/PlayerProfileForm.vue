@@ -52,9 +52,9 @@ const handleSubmit = form.handleSubmit(async () => {
 </script>
 
 <template>
-  <div class="p-4 flex items-center justify-center min-h-screen bg-slate-950">
+  <div class="p-4 flex items-center justify-center min-h-screen bg-primary-50">
     <form
-      class="max-w-[500px] w-full bg-slate-800 rounded-[8px] p-[16px]"
+      class="max-w-[500px] w-full bg-slate-700 rounded-[8px] p-[16px]"
       @submit.prevent="handleSubmit"
     >
       <Field name="name" v-slot="{ field }" class="456">

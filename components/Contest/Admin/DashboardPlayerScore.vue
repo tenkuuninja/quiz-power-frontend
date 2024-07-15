@@ -1,81 +1,136 @@
 <script setup lang="ts">
-import { useQuery, useQueryClient } from "@tanstack/vue-query";
-import { ref, defineProps } from "vue";
-import { ContestApi, QuizApi } from "~/services";
-import { IoEyeOutline } from "oh-vue-icons/icons";
-import { useForm, Form, Field } from "vee-validate";
-import * as yup from "yup";
-import { EQuestionType } from "~/common/enum/entity";
-import { useContestStore } from "~/stores";
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { ref, defineProps } from 'vue'
+import { ContestApi, QuizApi } from '~/services'
+import { IoEyeOutline } from 'oh-vue-icons/icons'
+import { useForm, Form, Field } from 'vee-validate'
+import * as yup from 'yup'
+import { EQuestionType } from '~/common/enum/entity'
+import { useContestStore } from '~/stores'
 
 const validationSchema = yup.object({
-  name: yup.string().trim().required("Đây là trường bắt buộc"),
-});
+  name: yup.string().trim().required('Đây là trường bắt buộc'),
+})
 
 interface IProps {
-  contestId: string;
+  contestId: string
 }
 
 interface IEmits {
-  (eventName: "submit", question: any): void;
+  (eventName: 'submit', question: any): void
 }
 
-const props = defineProps<IProps>();
-const emit = defineEmits<IEmits>();
+const props = defineProps<IProps>()
+const emit = defineEmits<IEmits>()
 
 const form = useForm({
   validationSchema: validationSchema,
-});
-const contestStore = useContestStore();
+})
+const contestStore = useContestStore()
 
-const { contestId } = toRefs(props);
+const { contestId } = toRefs(props)
 
-const contest = computed(() => contestStore?.getContest(contestId.value));
+const contest = computed(() => contestStore?.getContest(contestId.value))
+const sortedPlayers = computed(() => {
+  const players = [...contest?.value?.players]
+  players.sort((p1: any, p2: any) => {
+    if (p1?.score !== p2?.score) {
+      return p2?.score - p1?.score
+    }
+    return p2?.name > p1?.name ? 1 : -1
+  })
+  return players
+})
 
 const handleSubmit = async () => {
   try {
     await ContestApi.startContest({
       contestId: props?.contestId,
-    });
+    })
   } catch (error) {
     //
-    console.log(error);
+    console.log(error)
   }
-};
+}
 </script>
 
 <template>
-  <div class="p-4 min-h-screen">
-    <div class="container text-white bg-slate-900/50 w-full p-4 min-h-[500px]">
-      <table class="w-full">
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Rank</th>
-            <th>Score</th>
-            <th>Streak</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="player of contest?.players" :key="player?.id">
-            <td>
+  <div class="min-h-screen p-4">
+    <div
+      class="container min-h-[500px] w-full max-w-[1080px] rounded-[8px] bg-slate-900/10 p-4 text-slate-900"
+    >
+      <div>
+        <div class="flex items-center justify-between pb-[8px] font-bold">
+          <div class="w-[60px] text-center">Rank</div>
+          <div class="w-[400px]">Player</div>
+          <div class="w-[100px] text-center">Score</div>
+          <div class="w-[calc(100%-60px-400px-100px-16px*3)] text-center">
+            Steak
+          </div>
+        </div>
+        <div class="divide-y divide-slate-400">
+          <div
+            v-for="(player, i) of sortedPlayers"
+            :key="player?.id"
+            class="flex items-center justify-between py-[16px]"
+          >
+            <div class="w-[60px] text-center">{{ i + 1 }}</div>
+            <div class="w-[400px]">
               <div class="flex items-center">
                 <img
                   :src="`/assets/contest/avatar/avataaars-${player?.avatar}.svg`"
                   alt=""
-                  class="w-[32px] mt-[-6px]"
+                  class="mt-[-6px] w-[32px]"
                 />
-                <p class="text-[20px] text-white ml-[12px] font-bold pr-[12px]">
+                <p class="ml-[12px] pr-[12px] text-[20px] font-bold">
                   {{ player?.name }}
                 </p>
               </div>
-            </td>
-            <td class="text-center">{{ player?.rank || 1 }}</td>
-            <td class="text-center">{{ player?.score }}</td>
-            <td class="text-center">{{ player?.streak }}</td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+            <div class="w-[100px] text-center">{{ player?.score }}</div>
+            <div
+              class="relative flex w-[calc(100%-60px-400px-100px-16px*3)] overflow-hidden rounded-[8px] bg-slate-700/50 text-center"
+            >
+              <p class="absolute px-[8px] leading-[24px] text-white">
+                {{ player?.streak }}
+              </p>
+              <div
+                class="flex h-[24px] items-center overflow-hidden rounded-[8px]"
+                :style="{
+                  width:
+                    (player?.answers?.length /
+                      contest?.contestQuiz?.questions?.length) *
+                      100 +
+                    '%',
+                }"
+              >
+                <div
+                  class="h-full bg-green-500 transition-all"
+                  :style="{
+                    width:
+                      (player?.answers?.filter((ans) => ans?.isCorrect)
+                        ?.length /
+                        player?.answers?.length) *
+                        100 +
+                      '%',
+                  }"
+                ></div>
+                <div
+                  class="h-full bg-red-500 transition-all"
+                  :style="{
+                    width:
+                      (player?.answers?.filter((ans) => !ans?.isCorrect)
+                        ?.length /
+                        player?.answers?.length) *
+                        100 +
+                      '%',
+                  }"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

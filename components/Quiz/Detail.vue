@@ -1,103 +1,114 @@
 <script setup lang="ts">
-import { useQuery, useQueryClient } from "@tanstack/vue-query";
-import { ref } from "vue";
-import { QuizApi, CategoryApi, ContestApi } from "~/services";
-import { IoEyeOutline } from "oh-vue-icons/icons";
-import { useForm, Form, Field } from "vee-validate";
-import * as yup from "yup";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { ref } from 'vue'
+import { QuizApi, CategoryApi, ContestApi } from '~/services'
+import { IoEyeOutline } from 'oh-vue-icons/icons'
+import { useForm, Form, Field } from 'vee-validate'
+import * as yup from 'yup'
+import { useAuthStore } from '~/stores'
+import { EUserRole } from '~/common/enum/entity'
+
+const authStore = useAuthStore()
+
+const profile = computed(() => authStore?.profile)
 
 const updateQuestionSchema = yup.object({
   id: yup.number().nullable().optional(),
-  name: yup.string().trim().required("This field is required"),
+  name: yup.string().trim().required('This field is required'),
   status: yup.boolean().nullable().optional(),
   visibility: yup.boolean().nullable().optional(),
-  categories: yup.array().min(1, "Tối thiểu 1 danh mục").optional(),
-});
+  categories: yup.array().min(1, 'Tối thiểu 1 danh mục').optional(),
+})
 
 interface IUpdateFormProps {
-  quizId: number;
+  quizId: number
 }
 
 interface IUpdateFormEmits {
-  (eventName: "submit"): void;
+  (eventName: 'submit'): void
 }
 
-const props = defineProps<IUpdateFormProps>();
-const emit = defineEmits<IUpdateFormEmits>();
+const props = defineProps<IUpdateFormProps>()
+const emit = defineEmits<IUpdateFormEmits>()
 
-const { quizId } = props;
+const { quizId } = props
 
-const router = useRouter();
+const router = useRouter()
+const openCreateContestDialog = ref(false)
 
-const loading = ref(false);
+const loading = ref(false)
 
 const quizDetailRequest = useQuery({
-  queryKey: ["quiz-detail", ["quiz-detail", quizId].join("-")],
+  queryKey: ['quiz-detail', ['quiz-detail', quizId].join('-')],
   queryFn: async () => {
-    const response = await QuizApi.getDetailQuiz({ id: quizId });
+    const response = await QuizApi.getDetailQuiz({ id: quizId })
 
-    return response;
+    return response
   },
-});
+})
 
-const quiz = computed(() => quizDetailRequest?.data?.value?.data);
+const quiz = computed(() => quizDetailRequest?.data?.value?.data)
 
 const handleCreateContest = async () => {
-  loading.value = true;
-  try {
-    const createQuizResponse = await ContestApi.createContest({
-      quizId: +quizId,
-    });
-    const contestId = createQuizResponse?.data?.id;
-    window.open(`/contest/${contestId}/admin`);
-  } catch (error) {
-    //
-  }
-  loading.value = false;
-};
+  openCreateContestDialog.value = true
+}
 </script>
 
 <template>
   <span v-if="quizDetailRequest.isPending?.value" class="">Loading...</span>
   <div v-if="quizDetailRequest.isSuccess?.value" class="">
-    <h1>{{ quiz?.name }}</h1>
-    <div class="flex flex-wrap gap-[4px]">
+    <h1 class="text-[20px] font-bold">{{ quiz?.name }}</h1>
+    <div class="mt-[16px] flex flex-wrap gap-[4px]">
       <Chip
         v-for="(category, i) in quiz?.categories"
         :key="category?.id || i"
         :label="category?.name"
       />
     </div>
-    <div>
-      <Button @click="handleCreateContest()">Create a game</Button>
+    <div class="mt-[20px] flex space-x-[16px]">
+      <Button
+        v-if="profile?.role === EUserRole.User"
+        @click="handleCreateContest()"
+        label="Tạo cuộc thi"
+        icon="pi pi-palette"
+        class="rounded-full"
+      />
+      <Button
+        @click="handleCreateContest()"
+        outlined
+        label="Xuất câu hỏi"
+        icon="pi pi-file-pdf"
+        class="rounded-full"
+      />
+      <Button
+        @click="handleCreateContest()"
+        outlined
+        label="Chia sẻ"
+        icon="pi pi-share-alt"
+        class="rounded-full"
+      />
     </div>
-    <div class="space-y-[16px]">
-      <div
+    <div class="mt-[24px] space-y-[16px]">
+      <QuizQuestionCard
         v-for="(question, i) in quiz?.questions"
+        :question="question"
         :key="question?.id || i"
-        class="p-[16px] shadow rounded-[8px]"
-      >
-        <div>{{ question?.content }}</div>
-        <div class="flex flex-wrap gap-[16px] mt-[16px]">
-          <div
-            v-for="(option, j) in question?.options"
-            :key="option?.id || j"
-            class="w-[calc(50%-8px)] flex items-center space-x-[16px]"
-          >
-            <div
-              :class="
-                cn(
-                  'w-[12px] h-[12px] rounded-full',
-                  option?.isCorrect ? 'bg-green-500' : 'bg-red-500'
-                )
-              "
-            ></div>
-            <span>
-              {{ option?.content }}
-            </span>
-          </div>
-        </div>
-      </div>
+        @click="
+          () => {
+            openQuestion = true
+            questionToUpdate = question
+          }
+        "
+      />
     </div>
   </div>
+  <QuizCreateContestDialog
+    :open="openCreateContestDialog"
+    :quizId="quizId"
+    :onClose="
+      () => {
+        openCreateContestDialog = false
+      }
+    "
+  />
 </template>

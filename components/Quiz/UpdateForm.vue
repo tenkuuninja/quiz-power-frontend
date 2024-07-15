@@ -1,228 +1,294 @@
 <script setup lang="ts">
-import { useQuery, useQueryClient } from "@tanstack/vue-query";
-import { ref } from "vue";
-import { QuizApi, CategoryApi } from "~/services";
-import { IoEyeOutline } from "oh-vue-icons/icons";
-import { useForm, Form, Field } from "vee-validate";
-import * as yup from "yup";
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { ref } from 'vue'
+import { QuizApi, CategoryApi, UploadApi } from '~/services'
+import { IoEyeOutline } from 'oh-vue-icons/icons'
+import { useForm, Form, Field } from 'vee-validate'
+import * as yup from 'yup'
 
 const updateQuestionSchema = yup.object({
   id: yup.number().nullable().optional(),
-  name: yup.string().trim().required("This field is required"),
+  name: yup.string().trim().required('Tên không được bỏ trống'),
+  image: yup.mixed(),
   status: yup.boolean().nullable().optional(),
   visibility: yup.boolean().nullable().optional(),
-  categories: yup.array().min(1, "Tối thiểu 1 danh mục").optional(),
-});
+  categories: yup.array().min(1, 'Tối thiểu 1 danh mục').optional(),
+})
 
 interface IUpdateFormProps {
-  quizId: number;
+  quizId: number
 }
 
 interface IUpdateFormEmits {
-  (eventName: "submit"): void;
+  (eventName: 'submit'): void
 }
 
-const props = defineProps<IUpdateFormProps>();
-const emit = defineEmits<IUpdateFormEmits>();
+const props = defineProps<IUpdateFormProps>()
+const emit = defineEmits<IUpdateFormEmits>()
 
-const { quizId } = props;
+const { quizId } = toRefs(props)
 
-const openQuestion = ref(false);
-const questionToUpdate = ref<any>(null);
+const openSuggestQuestion = ref(false)
+const openQuestion = ref(false)
+const questionToUpdate = ref<any>(null)
 
-console.log(quizId, openQuestion, questionToUpdate);
+console.log(props.quizId, openQuestion, questionToUpdate)
 // const route = useRoute();
 // const quizId = +route?.params?.id;
 
 const form = useForm({
   validationSchema: updateQuestionSchema,
-});
-
-const [name, nameAttrs] = form.defineField("name");
-const [visibility, visibilityAttrs] = form.defineField("visibility");
-const [status, statusAttrs] = form.defineField("status");
+})
 
 const listCategoryRequest = useQuery({
-  queryKey: ["category"],
+  queryKey: ['category'],
   queryFn: () => CategoryApi.getListCategory({}),
-});
+})
 
 const quizDetailRequest = useQuery({
-  queryKey: ["quiz-detail", ["quiz-detail", quizId].join("-")],
+  queryKey: ['quiz-detail', ['quiz-detail', props.quizId].join('-')],
   queryFn: async () => {
-    const response = await QuizApi.getDetailQuiz({ id: quizId });
+    const response = await QuizApi.getDetailQuiz({ id: props.quizId })
 
-    return response;
+    const quiz = response?.data
+    if (quiz) {
+      form.resetForm({
+        values: {
+          ...quiz,
+          visibility: quiz?.visibility === 1,
+          status: quiz?.status === 1,
+        },
+      })
+    }
+
+    return response
   },
-});
+})
 
-const categories = computed(() => listCategoryRequest?.data?.value?.data || []);
+const categories = computed(() => listCategoryRequest?.data?.value?.data || [])
+const questions = computed(() => form?.values?.questions || [])
 
-const selectedCountry = ref();
+const selectedCountry = ref()
 
-const router = useRouter();
+const router = useRouter()
 
-const loading = ref(false);
+const loading = ref(false)
 
-const onSubmit = form.handleSubmit(async (values) => {
-  // Simulates a 2 second delay
-  console.log("Submitted", values);
+const onSubmit = form.handleSubmit(async ({ ...values }) => {
+  console.log('Submitted', values)
+  if (values?.image instanceof File) {
+    const uploadResponse = await UploadApi.uploadImage({
+      file: values?.image,
+      path: 'user/quiz/',
+    })
+    values.image = uploadResponse?.url
+  }
   try {
     const updateQuizResponse = await QuizApi.updateQuiz({
-      id: quizId,
+      id: props.quizId,
       name: values?.name,
+      image: values?.image,
       questions: values?.questions,
       categories: values?.categories,
       visibility: values?.visibility ? 1 : 0,
-      status: values?.status ? 1 : 0,
-    });
+      status: 1,
+    })
   } catch (error) {
-    console.log("updateQuiz", error);
+    console.log('updateQuiz', error)
     //
   }
-});
+})
+
+const onSubmitAsDraft = form.handleSubmit(async ({ ...values }) => {
+  console.log('Submitted', values)
+  if (values?.image instanceof File) {
+    const uploadResponse = await UploadApi.uploadImage({
+      file: values?.image,
+      path: 'user/quiz/',
+    })
+    values.image = uploadResponse?.url
+  }
+  try {
+    const updateQuizResponse = await QuizApi.updateQuiz({
+      id: props.quizId,
+      name: values?.name,
+      image: values?.image,
+      questions: values?.questions,
+      categories: values?.categories,
+      visibility: values?.visibility ? 1 : 0,
+      status: 0,
+    })
+  } catch (error) {
+    console.log('updateQuiz', error)
+    //
+  }
+})
 
 const handleSubmitQuestionFormDialog = (question: any) => {
-  const questions = toRaw(form.values?.questions) || [];
+  const questions = toRaw(form.values?.questions) || []
   if (question?.id) {
-    const index = questions?.findIndex((q: any) => q?.id === question?.id);
+    const index = questions?.findIndex((q: any) => q?.id === question?.id)
+    console.log('index', index, !!questions[index])
     if (questions[index]) {
-      questions[index] = question;
+      questions[index] = toRaw(question)
     }
   } else {
-    questions.push(question);
+    questions.push(question)
   }
-  console.log("questions", questions, question);
-  form.setFieldValue("questions", questions);
-  openQuestion.value = false;
-};
+  console.log('questions', questions, toRaw(question))
+  form.setFieldValue('questions', questions)
+  openQuestion.value = false
+}
+
+const handleGetSuggestQuestion = (newQuestions: any[]) => {
+  const questions = toRaw(form.values?.questions) || []
+  form.setFieldValue('questions', [...questions, ...newQuestions])
+  openSuggestQuestion.value = false
+}
 
 const handleSelectCategory = (categoryId: any) => {
-  const currentCategories = form.values?.categories || [];
-  const category = categories.value?.find((cate) => cate.id === categoryId);
+  const currentCategories = form.values?.categories || []
+  const category = categories.value?.find((cate) => cate.id === categoryId)
   if (category) {
-    form.setFieldValue("categories", [
+    form.setFieldValue('categories', [
       ...currentCategories?.filter((cate: any) => cate?.id !== categoryId),
       category,
-    ]);
+    ])
   }
-};
+}
 
 const handleRemoveCategory = (categoryId: any) => {
-  const currentCategories = form.values?.categories || [];
-  const category = categories.value?.find((cate) => cate.id === categoryId);
+  const currentCategories = form.values?.categories || []
+  const category = categories.value?.find((cate) => cate.id === categoryId)
   if (category) {
     form.setFieldValue(
-      "categories",
-      currentCategories?.filter((cate: any) => cate?.id !== categoryId)
-    );
+      'categories',
+      currentCategories?.filter((cate: any) => cate?.id !== categoryId),
+    )
   }
-};
-
-watch([quizDetailRequest.data], () => {
-  if (quizDetailRequest.data.value) {
-    const quiz = quizDetailRequest.data.value?.data;
-    form.resetForm({
-      values: {
-        ...quiz,
-        visibility: quiz?.visibility === 1,
-        status: quiz?.status === 1,
-      },
-    });
-  }
-});
-
-watchEffect(() => {
-  console.log("categories", categories?.value);
-});
+}
 </script>
 
 <template>
   <span v-if="quizDetailRequest.isPending?.value" class="">Loading...</span>
   <div v-if="quizDetailRequest.isSuccess?.value" class="">
-    <form class="space-y-[16px]" @submit.prevent="onSubmit">
-      <div class="space-y-[4px]">
-        <Field name="name" v-slot="{ field, errorMessage }" class="456">
-          <label class="font-semibold">Name</label>
-          <InputText type="text" class="block w-full" v-bind="field" />
-          <p v-if="errorMessage">{{ errorMessage }}</p>
-        </Field>
-      </div>
-      <div class="space-y-[4px]">
-        <Field name="categories" v-slot="{ errorMessage }" class="456">
-          <label class="font-semibold">Category</label>
-          <Dropdown
-            :options="categories"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="Select a City"
-            class="w-full"
-            @change="(e) => handleSelectCategory(e.value)"
+    <form class="" @submit.prevent="onSubmit">
+      <div class="flex justify-between">
+        <div class="w-[45%]">
+          <QuizUploadImage
+            :image="form?.values?.image"
+            @change="(file) => form.setFieldValue('image', file)"
           />
-          <div class="flex flex-wrap gap-[4px]">
-            <Chip
-              v-for="(category, i) in form.values?.categories"
-              :key="category?.id || i"
-              class="shadow rounded-full"
-              :label="category?.name"
-              removable
-              @remove="handleRemoveCategory(category?.id)"
-            />
+
+          <Field name="image" v-slot="{ errorMessage }">
+            <p v-if="errorMessage" class="text-[12px] text-red-600">
+              {{ errorMessage }}
+            </p>
+          </Field>
+        </div>
+        <div class="w-[50%] space-y-[16px]">
+          <div class="space-y-[4px]">
+            <Field name="name" v-slot="{ field, errorMessage }">
+              <label class="font-semibold">Name</label>
+              <InputText type="text" class="block w-full" v-bind="field" />
+              <p v-if="errorMessage" class="text-[12px] text-red-600">
+                {{ errorMessage }}
+              </p>
+            </Field>
           </div>
-          <p v-if="errorMessage">{{ errorMessage }}</p>
-        </Field>
+          <div class="space-y-[4px]">
+            <Field name="categories" v-slot="{ errorMessage }">
+              <label class="font-semibold">Category</label>
+              <Dropdown
+                :options="categories"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Select a City"
+                class="w-full"
+                @change="(e) => handleSelectCategory(e.value)"
+              />
+              <div class="flex flex-wrap gap-[4px]">
+                <Chip
+                  v-for="(category, i) in form.values?.categories"
+                  :key="category?.id || i"
+                  class="rounded-full shadow"
+                  :label="category?.name"
+                  removable
+                  @remove="handleRemoveCategory(category?.id)"
+                />
+              </div>
+              <p v-if="errorMessage" class="text-[12px] text-red-600">
+                {{ errorMessage }}
+              </p>
+            </Field>
+          </div>
+          <div class="flex items-center justify-between">
+            <Field name="visibility" v-slot="{ field, errorMessage }">
+              <label class="font-semibold">Công khai</label>
+              <InputSwitch
+                v-model:modelValue="field.value"
+                @update:modelValue="
+                  (checked) => form.setFieldValue('visibility', checked)
+                "
+              />
+              <p v-if="errorMessage" class="text-[12px] text-red-600">
+                {{ errorMessage }}
+              </p>
+            </Field>
+          </div>
+        </div>
       </div>
-      <div class="flex items-center">
-        <Field name="status" v-slot="{ field, errorMessage }" class="456">
-          <label class="font-semibold">Public</label>
-          <InputSwitch
-            v-model:modelValue="field.value"
-            @update:modelValue="
-              (checked) => form.setFieldValue('status', checked)
-            "
-          />
-          <p v-if="errorMessage">{{ errorMessage }}</p>
-        </Field>
-      </div>
-      <div class="flex items-center">
-        <Field name="visibility" v-slot="{ field, errorMessage }" class="456">
-          <label class="font-semibold">Visible</label>
-          <InputSwitch
-            v-model:modelValue="field.value"
-            @update:modelValue="
-              (checked) => form.setFieldValue('visibility', checked)
-            "
-          />
-          <p v-if="errorMessage">{{ errorMessage }}</p>
-        </Field>
-      </div>
-      <div>
-        <span
-          class="pi pi-plus"
+      <div class="mt-[32px] flex justify-center space-x-[16px]">
+        <button
+          type="button"
+          class="flex cursor-pointer items-center space-x-[4px] rounded-full bg-primary-300 px-[16px] py-[4px] transition-all hover:bg-primary-400"
           @click="
             () => {
-              openQuestion = true;
-              questionToUpdate = null;
+              openQuestion = true
+              questionToUpdate = null
             }
           "
-        ></span>
+        >
+          <span class="pi pi-plus"></span>
+          <span>Thêm câu hỏi</span>
+        </button>
+        <button
+          type="button"
+          class="flex cursor-pointer items-center space-x-[4px] rounded-full bg-primary-300 px-[16px] py-[4px] transition-all hover:bg-primary-400"
+          @click="
+            () => {
+              openSuggestQuestion = true
+            }
+          "
+        >
+          <span class="pi pi-plus"></span>
+          <span>Gợi ý câu hỏi</span>
+        </button>
       </div>
-      <div class="space-y-[16px]">
+      <div class="mt-[24px] space-y-[16px]">
         <QuizQuestionCard
-          v-for="(question, i) in form?.values?.questions"
+          v-for="(question, i) in questions"
           :question="question"
           :key="question?.id || i"
           @click="
             () => {
-              openQuestion = true;
-              questionToUpdate = question;
+              openQuestion = true
+              questionToUpdate = question
             }
           "
         />
       </div>
-      <div class="flex justify-end">
+      <div class="mt-[24px] flex justify-end space-x-[16px]">
+        <Button
+          label="Submit"
+          type="button"
+          outlined
+          @click="onSubmitAsDraft"
+        >
+          {{ form?.isSubmitting?.value ? 'Đang lưu...' : 'Lưu dạng nháp' }}
+        </Button>
         <Button label="Submit" type="submit">
-          {{ form?.isSubmitting?.value ? "Submitting..." : "Submit" }}
+          {{ form?.isSubmitting?.value ? 'Đang lưu...' : 'Lưu' }}
         </Button>
       </div>
     </form>
@@ -233,9 +299,18 @@ watchEffect(() => {
     :quizId="quizId"
     :onClose="
       () => {
-        openQuestion = false;
+        openQuestion = false
       }
     "
     @submit="handleSubmitQuestionFormDialog"
+  />
+  <QuizQuestionSuggestionDialog
+    :open="openSuggestQuestion"
+    :onClose="
+      () => {
+        openSuggestQuestion = false
+      }
+    "
+    @submit="handleGetSuggestQuestion"
   />
 </template>

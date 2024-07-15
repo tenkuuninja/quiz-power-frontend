@@ -1,92 +1,88 @@
 <script setup>
-import { ref, computed } from "vue";
-import { AuthApi } from "~~/services/AuthApi";
-const email = ref("");
-const password = ref("");
-const checked = ref(false);
+import { ref, computed } from 'vue'
+import { AuthApi } from '~~/services/AuthApi'
+const email = ref('')
+const password = ref('')
+const checked = ref(false)
 
 const handleRegister = () => {
   AuthApi.register({
     username: email.value,
     password: password.value,
-  });
-};
+  })
+}
 
 definePageMeta({
-  layout: false,
-});
+  layout: 'user',
+})
 </script>
 
 <template>
-  <div
-    class="flex items-center bg-[#f8fafc] justify-center min-h-screen min-w-screen overflow-hidden"
-  >
-    <div class="flex flex-col items-center justify-center">
-      <!-- <img :src="logoUrl" alt="Sakai logo" class="mb-5 w-6rem flex-shrink-0" /> -->
+  <div class="min-h-[calc(100vh-80px)] overflow-hidden bg-[#f8fafc] py-[160px]">
+    <div
+      class="mx-auto w-full max-w-[360px] rounded-[56px] p-[6px]"
+      style="
+        background: linear-gradient(
+          180deg,
+          var(--primary-color) 10%,
+          rgba(33, 150, 243, 0) 30%
+        );
+      "
+    >
       <div
-        class=""
-        style="
-          border-radius: 56px;
-          padding: 0.3rem;
-          background: linear-gradient(
-            180deg,
-            var(--primary-color) 10%,
-            rgba(33, 150, 243, 0) 30%
-          );
-        "
+        class="w-full bg-white px-5 py-8 sm:px-8"
+        style="border-radius: 53px"
       >
-        <div
-          class="w-full bg-white py-8 px-5 sm:px-8"
-          style="border-radius: 53px"
-        >
-          <div class="text-center mb-5">
-            <!-- <img src="/demo/images/login/avatar.png" alt="Image" height="50" class="mb-3" /> -->
-            <div class="text-900 text-3xl font-medium mb-3">Register</div>
-            <span class="text-600 font-medium">Sign up to continue</span>
+        <div class="mb-5 text-center">
+          <div class="text-900 mb-3 text-3xl font-medium">
+            Đăng ký tài khoản
           </div>
+          <span class="text-600 font-medium">Đăng ký để tiếp tục</span>
+        </div>
 
-          <div>
-            <label for="email1" class="block text-900 text-xl font-medium mb-2"
-              >Username</label
+        <div>
+          <label for="email1" class="text-900 mb-2 block text-xl font-medium"
+            >Tên đăng nhập</label
+          >
+          <InputText
+            id="email1"
+            v-model="email"
+            type="text"
+            placeholder="Email address"
+            class="md:w-30rem mb-5 w-full"
+            style="padding: 1rem"
+          />
+
+          <label
+            for="password1"
+            class="text-900 mb-2 block text-xl font-medium"
+          >
+            Mật khẩu</label
+          >
+          <Password
+            id="password1"
+            v-model="password"
+            placeholder="Password"
+            :toggleMask="true"
+            class="mb-3 w-full"
+            inputClass="w-full"
+            :inputStyle="{ padding: '1rem' }"
+          ></Password>
+
+          <div class="mb-5 flex items-center justify-between gap-5">
+            <div class="flex items-center"></div>
+            <NuxtLink
+              class="ml-2 cursor-pointer text-right text-[12px] font-medium text-primary no-underline"
+              href="/login"
             >
-            <InputText
-              id="email1"
-              v-model="email"
-              type="text"
-              placeholder="Email address"
-              class="w-full md:w-30rem mb-5"
-              style="padding: 1rem"
-            />
-
-            <label
-              for="password1"
-              class="block text-900 font-medium text-xl mb-2"
-              >Password</label
-            >
-            <Password
-              id="password1"
-              v-model="password"
-              placeholder="Password"
-              :toggleMask="true"
-              class="w-full mb-3"
-              inputClass="w-full"
-              :inputStyle="{ padding: '1rem' }"
-            ></Password>
-
-            <div class="flex items-center justify-between mb-5 gap-5">
-              <div class="flex items-center"></div>
-              <a
-                class="font-medium no-underline ml-2 text-right cursor-pointer"
-                style="color: var(--primary-color)"
-                >Have account? Login</a
-              >
-            </div>
-            <Button
-              label="Register"
-              class="w-full p-3 text-xl"
-              @click="handleRegister()"
-            ></Button>
+              Đã có tài khoản?
+            </NuxtLink>
           </div>
+          <Button
+            label="Đăng ký"
+            class="w-full text-xl"
+            @click="handleRegister()"
+          ></Button>
         </div>
       </div>
     </div>
@@ -95,13 +91,4 @@ definePageMeta({
   <AppConfig simple />
 </template>
 
-<style scoped>
-.pi-eye {
-  transform: scale(1.6);
-  margin-right: 1rem;
-}
-.pi-eye-slash {
-  transform: scale(1.6);
-  margin-right: 1rem;
-}
-</style>
+<style scoped></style>

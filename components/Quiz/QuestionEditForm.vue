@@ -1,215 +1,224 @@
 <script setup lang="ts">
-import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { ref, defineProps } from "vue";
-import { QuizApi } from "~/services";
-import { IoEyeOutline } from "oh-vue-icons/icons";
-import { useForm, Form, Field } from "vee-validate";
-import * as yup from "yup";
-import { EQuestionType } from "~/common/enum/entity";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { ref, defineProps } from 'vue'
+import { QuizApi } from '~/services'
+import { IoEyeOutline } from 'oh-vue-icons/icons'
+import { useForm, Form, Field } from 'vee-validate'
+import * as yup from 'yup'
+import { EQuestionType } from '~/common/enum/entity'
 
-const confirm = useConfirm();
-const toast = useToast();
+const confirm = useConfirm()
+const toast = useToast()
 
 const updateQuestionSchema = yup.object({
   id: yup.number().nullable().optional(),
-  content: yup.string().trim().required("This field is required"),
+  content: yup.string().trim().required('Trường này không được bỏ trống'),
   questionType: yup
     .string()
     .trim()
-    .required("This field is required")
+    .required('Trường này không được bỏ trống')
     .default(EQuestionType.SingleChoice),
   answerLength: yup.number().nullable().optional(),
   options: yup
     .array(
       yup.object({
         id: yup.number().nullable().optional(),
-        content: yup.string().trim().required("This field is required"),
+        content: yup.string().trim().required('Trường này không được bỏ trống'),
         isCorrect: yup.boolean().default(false),
-      })
+      }),
     )
     .required(),
-});
+})
 
 interface IQuestionSchema extends yup.Asserts<typeof updateQuestionSchema> {}
 
 interface IQuestionEditFormProps {
-  open: boolean;
-  question: any;
-  quizId: number;
-  onClose: VoidFunction;
+  open: boolean
+  question: any
+  quizId: number
+  onClose: VoidFunction
 }
 
 interface IQuestionEditFormEmits {
-  (eventName: "submit", question: any): void;
+  (eventName: 'submit', question: any): void
 }
 
-const props = defineProps<IQuestionEditFormProps>();
-const emit = defineEmits<IQuestionEditFormEmits>();
+const props = defineProps<IQuestionEditFormProps>()
+const emit = defineEmits<IQuestionEditFormEmits>()
 
 const form = useForm<IQuestionSchema>({
   validationSchema: updateQuestionSchema,
-});
-const { values, defineField, isSubmitting, resetForm } = toRefs(form);
+})
+const { values, defineField, isSubmitting, resetForm } = toRefs(form)
 
 const suggestAnswerRequest = useMutation({
   mutationFn: QuizApi.suggestionAnswer,
-});
+})
 
-const { open, question, onClose } = toRefs(props);
+const { open, question, onClose } = toRefs(props)
 
-console.log("props", props?.open, props?.question);
+console.log('props', props?.open, props?.question)
 
-const questionType = computed(() => values?.value?.questionType);
+const questionType = computed(() => values?.value?.questionType)
 const optionArray = computed(() => {
   if (values?.value?.questionType === EQuestionType.TextEntryWithLength) {
-    return [null];
+    return [null]
   }
   return [
     ...new Array(
       (values?.value?.options?.length || 0) >= 4
         ? values?.value?.options?.length
-        : 4
+        : 4,
     ),
-  ];
-});
+  ]
+})
 
 const questionTypeOptions = [
   {
-    label: "Single Answer",
+    label: 'Một lựa chọn',
     value: EQuestionType.SingleChoice,
   },
   {
-    label: "Multiple Answer",
+    label: 'Nhiều lựa chọn',
     value: EQuestionType.MultipleChoice,
   },
-  // {
-  //   label: "Text Entry",
-  //   value: EQuestionType.TextEntry,
-  // },
   {
-    label: "Text Entry Length",
+    label: 'Nhập',
     value: EQuestionType.TextEntryWithLength,
   },
-];
+]
 
 const handleSetIsCorrect = (index: number) => {
   let options =
-    form.values?.options?.map((option: any) => ({ ...option })) || [];
+    form.values?.options?.map((option: any) => ({ ...option })) || []
   if (form.values?.questionType === EQuestionType.SingleChoice) {
-    options = options?.map((option: any) => ({ ...option, isCorrect: false }));
-    options[index].isCorrect = true;
-    form.setFieldValue("options", options);
+    options = options?.map((option: any) => ({ ...option, isCorrect: false }))
+    options[index].isCorrect = true
+    form.setFieldValue('options', options)
   }
   if (form.values?.questionType === EQuestionType.MultipleChoice) {
-    console.log(options[index].isCorrect, !options[index].isCorrect);
-    options[index].isCorrect = !options[index].isCorrect;
-    console.log(options[index].isCorrect);
-    form.setFieldValue("options", [...options]);
+    console.log(options[index].isCorrect, !options[index].isCorrect)
+    options[index].isCorrect = !options[index].isCorrect
+    console.log(options[index].isCorrect)
+    form.setFieldValue('options', [...options])
   }
-};
+}
 
 const handleRemoveOption = (index: number) => {
   let options =
-    form.values?.options?.map((option: any) => ({ ...option })) || [];
-  options[index].content = "";
-  form.setFieldValue("options", options);
-};
+    form.values?.options?.map((option: any) => ({ ...option })) || []
+  options[index].content = ''
+  form.setFieldValue('options', options)
+}
 
 const handleSuggestAnswer = async () => {
   if (!form.values?.content) {
     toast.add({
-      severity: "info",
-      summary: "Please enter question content!",
+      severity: 'info',
+      summary: 'Please enter question content!',
       life: 3000,
-    });
-    return;
+    })
+    return
   }
   const handleGet = async () => {
     try {
       const response = await suggestAnswerRequest.mutateAsync({
         message: form.values?.content,
         type: form.values?.questionType,
-      });
-      form.setFieldValue("options", response?.data);
+      })
+      form.setFieldValue('options', response?.data)
     } catch (error) {
       toast.add({
-        severity: "error",
-        summary: "Please try again!",
+        severity: 'error',
+        summary: 'Please try again!',
         life: 3000,
-      });
+      })
     }
-  };
+  }
   const options = form.values?.options?.filter(
-    (option: any) => !!option?.content
-  );
+    (option: any) => !!option?.content,
+  )
   if (options?.length) {
     confirm.require({
       header: "You've some options",
-      message: "All your options will be replaced",
-      rejectLabel: "Cancel",
-      acceptLabel: "Replace",
+      message: 'All your options will be replaced',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Replace',
       accept: handleGet,
       reject: () => {},
-    });
+    })
   } else {
-    handleGet();
+    handleGet()
   }
-};
+}
 
 const handleSubmit = () => {
   const options = form.values?.options?.filter(
-    (option: any) => !!option?.content
-  );
-  emit("submit", { ...form.values, options });
-};
+    (option: any) => !!option?.content,
+  )
+  if (!options?.length) {
+    toast.add({
+      severity: 'error',
+      summary: 'Hãy nhập đáp án cho câu hỏi này!',
+      life: 3000,
+    })
+    return
+  }
+  const hasSelected = !!options?.find((option: any) => !!option?.isCorrect)
+  if (!hasSelected) {
+    toast.add({
+      severity: 'error',
+      summary: 'Hãy chọn đáp án cho câu hỏi này!',
+      life: 3000,
+    })
+    return
+  }
+  emit('submit', { ...form.values, options })
+}
 
 watch([open, question], () => {
   if (props?.question) {
-    const question = props?.question;
+    const question = props?.question
     form.resetForm({
       values: {
         questionType: EQuestionType.SingleChoice,
         ...question,
       },
-    });
+    })
   } else {
     form.resetForm({
       values: {
-        content: "",
+        content: '',
         questionType: EQuestionType.SingleChoice,
         options: [],
       },
-    });
+    })
   }
-});
+})
 
-watch([questionType], ([newQuestionType], [oldQuestionType]) => {
-  if (newQuestionType === EQuestionType.TextEntryWithLength) {
-    form.setFieldValue("options", [
-      {
-        isCorrect: true,
-        content: "",
-      },
-    ]);
-  } else {
-    form.setFieldValue(
-      "options",
-      values?.value?.options?.map((option: any) => ({
-        ...option,
-        isCorrect: false,
-      }))
-    );
-  }
-});
-
-const backgroundColors = [
-  "bg-teal-500",
-  "bg-violet-500",
-  "bg-blue-500",
-  "bg-pink-500",
-  "bg-purple-500",
-  "bg-cyan-500",
-];
+watch(
+  [questionType, open],
+  ([newQuestionType, oldOpen], [oldQuestionType, newOpen]) => {
+    if (oldOpen === newOpen) {
+      if (newQuestionType === EQuestionType.TextEntryWithLength) {
+        form.setFieldValue('options', [
+          {
+            isCorrect: true,
+            content: '',
+          },
+        ])
+      } else {
+        form.setFieldValue(
+          'options',
+          values?.value?.options?.map((option: any) => ({
+            ...option,
+            isCorrect: false,
+          })),
+        )
+      }
+    }
+  },
+)
 </script>
 
 <template>
@@ -221,32 +230,34 @@ const backgroundColors = [
     blockScroll
     pt:mask:class="overflow-y-auto !block py-[40px]"
     pt:root:class="p-0 !max-h-auto"
-    class="w-[90%] max-w-screen-md bg-primary text-white mx-auto !max-h-max"
+    class="mx-auto !max-h-max w-[90%] max-w-screen-md bg-primary text-white"
   >
     <template #container="{ closeCallback }">
-      <div class="p-4 rounded-[8px] bg-white">
+      <div class="rounded-[8px] bg-white p-4">
         <Field name="content" v-slot="{ field, errorMessage }" class="456">
-          <input
+          <Textarea
             v-bind="field"
             type="text"
-            class="w-full h-[200px] rounded-[8px] bg-primary p-[16px] text-white placeholder:text-white/70 text-[32px] text-center"
-            placeholder="Type question here"
+            placeholder="Nhập câu hỏi"
+            class="min-h-[120px] w-full text-[20px]"
           />
-          <span>{{ errorMessage }}</span>
+          <p v-if="errorMessage" class="text-[12px] text-red-600">
+            {{ errorMessage }}
+          </p>
         </Field>
-        <div class="flex flex-wrap gap-[16px] mt-[24px]">
+        <div class="mt-[24px] flex flex-wrap gap-[16px]">
           <div
-            class="flex border flex-wrap border-primary p-[4px] rounded-[8px] gap-[4px] max-w-full overflow-x-auto"
+            class="flex max-w-full flex-wrap gap-[4px] overflow-x-auto rounded-[8px] border border-primary p-[4px]"
           >
             <div
               v-for="type in questionTypeOptions"
               :key="type?.value"
               :class="
                 cn(
-                  `rounded-[4px] w-[calc(50%-2px)] text-center md:w-auto transition-all px-[8px] py-[2px] cursor-pointer`,
+                  `w-[calc(50%-2px)] cursor-pointer rounded-[4px] px-[8px] py-[2px] text-center transition-all md:w-auto`,
                   type?.value === values?.questionType
                     ? 'bg-primary/80'
-                    : ' text-primary'
+                    : 'text-primary',
                 )
               "
               @click="form.setFieldValue('questionType', type.value)"
@@ -256,7 +267,7 @@ const backgroundColors = [
           </div>
           <button
             :disabled="suggestAnswerRequest.isPending.value"
-            class="w-[32px] h-[32px] text-primary cursor-pointer flex justify-center items-center"
+            class="flex h-[32px] w-[32px] cursor-pointer items-center justify-center text-primary"
             type="button"
             v-if="
               form.values.questionType === EQuestionType.SingleChoice ||
@@ -274,62 +285,58 @@ const backgroundColors = [
             ></span>
           </button>
         </div>
-        <div class="space-y-[16px] mt-[24px]">
+        <div class="mt-[24px] space-y-[16px]">
           <div
             v-for="(_, i) in optionArray"
             :key="i"
             :class="
               cn(
-                'rounded-[8px] flex justify-between items-center p-[16px]',
-                backgroundColors[i % backgroundColors.length]
+                'flex items-center justify-between rounded-[8px] bg-primary-100 p-[16px]',
               )
             "
           >
             <div
               :class="
                 cn(
-                  'border border-neutral-200 w-[24px] h-[24px] flex justify-center items-center cursor-pointer',
+                  'flex h-[24px] w-[24px] cursor-pointer items-center justify-center',
                   values?.questionType === EQuestionType.MultipleChoice
                     ? 'rounded-[4px]'
                     : 'rounded-full',
-                  values?.options[i]?.isCorrect ? 'bg-primary text-white' : ''
+                  values?.options[i]?.isCorrect
+                    ? 'bg-green-500 text-white'
+                    : 'bg-red-500 text-white',
                 )
               "
               @click="handleSetIsCorrect(i)"
             >
-              <span class="pi pi-check"></span>
+              <span
+                :class="
+                  cn(
+                    'pi',
+                    values?.options[i]?.isCorrect ? 'pi-check' : 'pi-times',
+                  )
+                "
+              ></span>
             </div>
             <Field :name="`options.${i}.content`" v-slot="{ field }">
               <input
                 v-bind="field"
                 type="text"
-                class="min-h-[60px] p-[16px] text-[20px] text-white w-[calc(100%-20px-20px-16px*2)] placeholder:text-white/70"
-                placeholder="Type answer option here"
+                class="min-h-[40px] w-[calc(100%-20px-20px-16px*2)] px-[16px] text-[20px] text-slate-900 placeholder:text-slate-500"
+                placeholder="Nhập lựa chọn"
               />
             </Field>
             <div
-              class="w-[20px] h-[20px] flex justify-center items-center cursor-pointer"
+              class="flex h-[20px] w-[20px] cursor-pointer items-center justify-center"
               @click="handleRemoveOption(i)"
             >
-              <span class="pi pi-trash"></span>
+              <span class="pi pi-trash text-red-500"></span>
             </div>
           </div>
         </div>
-        {{ question }}
-        abc
-        <div class="flex items-center gap-4">
-          <Button
-            label="Cancel"
-            @click="closeCallback"
-            text
-            class="!p-4 w-full !text-primary-50 !border !border-white/30 hover:!bg-white/10"
-          ></Button>
-          <Button
-            label="Save"
-            @click="handleSubmit()"
-            text
-            class="!p-4 w-full !text-primary-50 !border !border-white/30 hover:!bg-white/10"
-          ></Button>
+        <div class="mt-[40px] flex items-center justify-end gap-4">
+          <Button label="Đóng" @click="closeCallback" text class="" />
+          <Button label="Lưu" @click="handleSubmit()" class="" />
         </div>
       </div>
     </template>

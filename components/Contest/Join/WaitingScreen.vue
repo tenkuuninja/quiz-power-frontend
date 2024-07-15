@@ -39,10 +39,10 @@ const handleSubmit = async () => {
 
 <template>
   <div
-    class="p-4 flex flex-col items-center justify-center min-h-screen bg-slate-950"
+    class="p-4 flex flex-col items-center justify-center min-h-screen bg-primary-50"
   >
     <div
-      class="max-w-[500px] w-full items-center bg-slate-800 rounded-[8px] p-[16px] flex"
+      class="max-w-[500px] w-full items-center bg-slate-700 rounded-[8px] p-[16px] flex"
     >
       <img
         :src="`/assets/contest/avatar/avataaars-${player?.avatar}.svg`"

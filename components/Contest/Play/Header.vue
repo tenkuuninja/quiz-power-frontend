@@ -26,7 +26,7 @@ const player = computed(() =>
 </script>
 
 <template>
-  <div class="fixed top-0 left-0 w-full bg-slate-950">
+  <div class="fixed top-0 left-0 w-full bg-slate-900">
     <div
       class="container h-[72px] flex items-center justify-between space-x-[16px]"
     >

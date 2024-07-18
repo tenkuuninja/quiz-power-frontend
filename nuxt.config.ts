@@ -1,10 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  srcDir: ".",
+  srcDir: '.',
   devtools: { enabled: true },
-  plugins: ["~/plugins/socket-io.client.ts"],
-  modules: ["nuxt-primevue"],
-  css: ["~/styles/main.scss"],
+  plugins: ['~/plugins/socket-io.client.ts'],
+  modules: ['nuxt-primevue'],
+  css: ['~/styles/main.scss'],
   primevue: {
     /* Options */
   },
@@ -15,6 +15,11 @@ export default defineNuxtConfig({
     },
   },
   components: {
-    dirs: ["~/components/providers", "~/components"],
+    dirs: ['~/components/providers', '~/components'],
   },
-});
+  runtimeConfig: {
+    public: {
+      API_URL: process.env.NUXT_API_URL,
+    },
+  },
+})

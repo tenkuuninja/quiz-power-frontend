@@ -1,3 +1,2 @@
-const runtimeConfig = useRuntimeConfig()
+export const API_URL = process.env['NUXT_PUBLIC_API_URL'] || 'https://quiz-power-backend.onrender.com'
 
-export const API_URL = runtimeConfig.public.API_URL

@@ -27,6 +27,7 @@ const message = ref('')
 
 const suggestQuestionRequest = useMutation({
   mutationFn: QuizApi.suggestionQuestion,
+  retry: 3,
 })
 
 const handleSuggestQuestion = async () => {

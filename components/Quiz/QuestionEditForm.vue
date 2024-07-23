@@ -53,6 +53,7 @@ const { values, defineField, isSubmitting, resetForm } = toRefs(form)
 
 const suggestAnswerRequest = useMutation({
   mutationFn: QuizApi.suggestionAnswer,
+  retry: 3,
 })
 
 const { open, question, onClose } = toRefs(props)

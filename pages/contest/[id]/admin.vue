@@ -42,7 +42,7 @@ watch([contest], ([newContest], [oldContest]) => {
           :contestId="contestId"
         />
         <ContestAdminDashboardPlayerScore
-          v-if="contest?.status === 'Started'"
+          v-if="contest?.status === 'Started' || contest?.status === 'Ended'"
           :contestId="contestId"
         />
         <ContestJoinCountDown v-if="showCountdown" :value="countdown" />

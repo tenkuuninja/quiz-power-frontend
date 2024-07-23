@@ -7,6 +7,7 @@ import { useForm, Form, Field } from 'vee-validate'
 import * as yup from 'yup'
 import { useAuthStore } from '~/stores'
 
+const toast = useToast()
 const authStore = useAuthStore()
 
 const updateQuestionSchema = yup.object({
@@ -36,34 +37,42 @@ const selectedCountry = ref()
 
 const router = useRouter()
 
-const loading = ref(false)
-
 const onSubmit = form.handleSubmit(async ({ ...values }) => {
-  // Simulates a 2 second delay
-  console.log('Submitted', values)
-  if (values?.image instanceof File) {
-    const uploadResponse = await UploadApi.uploadImage({
-      file: values?.image,
-      path: 'user/quiz/',
-    })
-    values.image = uploadResponse?.url
-  }
   try {
-    const updateQuizResponse = await QuizApi.updateQuiz({
+    if (values?.avatar instanceof File) {
+      const uploadResponse = await UploadApi.uploadImage({
+        file: values?.avatar,
+        path: 'user/avatar/',
+      })
+      values.avatar = uploadResponse?.url
+    }
+    await AuthApi.updateProfile({
       name: values?.name,
-      image: values?.image,
-      questions: values?.questions,
-      categories: values?.categories,
-      visibility: values?.visibility ? 1 : 0,
-      status: values?.status ? 1 : 0,
+      avatar: values?.avatar,
     })
-  } catch (error) {
-    console.log('updateQuiz', error)
-    //
+
+    const profileResponse = await AuthApi.getProfile()
+    authStore.setAuthProfile(profileResponse?.data)
+    form.resetForm({
+      values: profileResponse?.data
+    })
+
+    toast.add({
+      severity: 'success',
+      summary: 'Đổi thông thành công!',
+      life: 3000,
+    })
+  } catch (error: any) {
+    if (error?.message) {
+      toast.add({
+        severity: 'error',
+        summary: error?.message,
+        life: 3000,
+      })
+    }
   }
 })
 
-console.log('1', authStore?.profile)
 watch([profile], ([newProfile]) => {
   console.log(newProfile)
   form.resetForm({
@@ -79,7 +88,7 @@ watch([profile], ([newProfile]) => {
       <div class="mx-auto w-[200px]">
         <ProfileUploadImage
           :image="form?.values?.avatar"
-          @change="(file) => form.setFieldValue('image', file)"
+          @change="(file) => form.setFieldValue('avatar', file)"
         />
 
         <Field name="image" v-slot="{ errorMessage }">
@@ -113,13 +122,13 @@ watch([profile], ([newProfile]) => {
             disabled
             type="text"
             class="block w-full"
-            :modelValue="authStore?.profile?.username"
+            :modelValue="authStore?.profile?.email"
           />
         </div>
       </div>
     </div>
     <div class="mt-[24px] flex justify-end">
-      <Button label="Submit" type="submit">
+      <Button :loading="form?.isSubmitting?.value" label="Submit" type="submit">
         {{ form?.isSubmitting?.value ? 'Đang lưu...' : 'Lưu' }}
       </Button>
     </div>

@@ -1,15 +1,18 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { AuthApi } from '~~/services/AuthApi'
+const step = ref(0)
 const email = ref('')
-const password = ref('')
 const checked = ref(false)
 
-const handleRegister = () => {
-  AuthApi.register({
-    username: email.value,
-    password: password.value,
-  })
+const handleSubmitEmail = (_email: string) => {
+  console.log(_email)
+  email.value = _email
+  step.value = 1
+}
+
+const handleBack = () => {
+  step.value = 0
 }
 
 definePageMeta({
@@ -40,7 +43,16 @@ definePageMeta({
           >
         </div>
 
-        <ForgotPasswordEmailInput />
+        <ForgotPasswordEmailInput
+          v-if="step === 0"
+          :email="email"
+          @submit="handleSubmitEmail"
+        />
+        <ForgotPasswordOtpInput
+          v-if="step === 1"
+          :email="email"
+          @back="handleBack"
+        />
       </div>
     </div>
   </div>

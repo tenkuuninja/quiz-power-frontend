@@ -12,11 +12,11 @@ const toggle = (event: MouseEvent) => {
 }
 
 const items = ref([
-  {
-    label: 'Bảng điều khiển',
-    icon: 'pi pi-palette',
-    route: '/dashboard',
-  },
+  // {
+  //   label: 'Bảng điều khiển',
+  //   icon: 'pi pi-palette',
+  //   route: '/dashboard',
+  // },
   {
     label: 'Hồ sơ của tôi',
     icon: 'pi pi-user',

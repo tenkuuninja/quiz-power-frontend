@@ -48,4 +48,9 @@ export class QuizApi {
     const response = await axios.post('/quiz/suggestion-answer', payload)
     return response.data
   }
+
+  static exportPdf = async (payload: any) => {
+    const response = await axios.post('/quiz/export-pdf', payload)
+    return response.data
+  }
 }

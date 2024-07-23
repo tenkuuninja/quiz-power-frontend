@@ -67,7 +67,7 @@ const handleCreateContest = async () => {
           class="w-full"
         />
         <Button
-          :loading="createQuizResponse?.isPending?.value"
+          :loading="createContestRequest?.isPending?.value"
           label="Tạo cuộc thi"
           @click="handleCreateContest()"
           class="mt-[16px] w-full"

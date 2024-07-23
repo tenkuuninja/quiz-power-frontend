@@ -1,3 +1,23 @@
+<script setup lang="ts">
+import { useAuthStore } from '~/stores'
+
+const router = useRouter()
+const authStore = useAuthStore()
+const { isAuthenticated } = toRefs(authStore)
+
+watch(
+  [isAuthenticated],
+  ([newIsAuthenticated]) => {
+    if (!newIsAuthenticated) {
+      router.push({ path: '/' })
+    }
+  },
+  {
+    immediate: true,
+  },
+)
+</script>
+
 <template>
   <DashboardLayoutHeader />
   <div

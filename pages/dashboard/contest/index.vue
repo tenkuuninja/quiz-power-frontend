@@ -7,10 +7,17 @@ import dayjs from 'dayjs'
 
 const confirm = useConfirm()
 
+const search = ref('')
+const page = ref(1)
+
 // Query
 const getListContestRequest = useQuery({
-  queryKey: ['contests'],
-  queryFn: () => ContestApi.getListContest(),
+  queryKey: ['contests', search, page],
+  queryFn: () =>
+    ContestApi.getListContest({
+      search: search.value,
+      page: page.value,
+    }),
 })
 
 const contests = computed(() => getListContestRequest?.data?.value?.data)
@@ -28,19 +35,23 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-white p-[16px]">
+  <div class="min-h-[600px] rounded-[8px] bg-white p-[16px]">
     <div class="flex items-center justify-between">
       <h2 class="text-[40px] font-bold">Danh sách cuộc thi</h2>
       <Button label="Add" @click="handleCreateQuiz()" />
     </div>
+    <div class="mt-[32px] flex justify-end">
+      <IconField iconPosition="left">
+        <InputIcon class="pi pi-search"> </InputIcon>
+        <InputText
+          @input="(e) => debounce(() => (search = e.target.value))"
+          icon="pi-search"
+          placeholder="Tìm kiếm"
+        />
+      </IconField>
+    </div>
     <span v-if="getListContestRequest?.isPending?.value">Loading...</span>
     <div v-if="getListContestRequest?.isSuccess?.value" class="mt-[32px]">
-      <div class="flex justify-end">
-        <IconField iconPosition="left">
-          <InputIcon class="pi pi-search"> </InputIcon>
-          <InputText icon="pi-search" placeholder="Tìm kiếm" />
-        </IconField>
-      </div>
       <div class="divide-y divide-slate-200">
         <div
           v-for="contest of contests || []"
@@ -83,10 +94,11 @@ definePageMeta({
       </div>
     </div>
     <Paginator
-      v-if="!!total"
+      :alwaysShow="false"
       :rows="10"
       :totalRecords="total"
       class="mt-[24px]"
+      @page="(e) => (page = e.page + 1)"
     />
   </div>
   <ConfirmDialog></ConfirmDialog>

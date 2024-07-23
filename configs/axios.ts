@@ -35,15 +35,8 @@ instance.interceptors.response.use(
     const response: any = error?.response?.data;
     const status = error?.response?.status;
 
-    const errorObject = {
-      code: error?.code,
-      message: error?.message,
-      name: error?.name,
-      response: response,
-    };
-
     if (axios.isCancel(error)) {
-      throw errorObject;
+      throw response;
     }
 
     // if (status >= 400 && status < 500 && !hideErrorMessage) {
@@ -53,7 +46,7 @@ instance.interceptors.response.use(
     //     toast.error(response?.message)
     //   }
     // }
-    throw errorObject;
+    throw response;
   }
 );
 

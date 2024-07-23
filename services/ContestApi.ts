@@ -20,6 +20,11 @@ export class ContestApi {
     return response.data;
   };
 
+  static findContest = async (payload: any) => {
+    const response = await axios.post("/contest/find-contest", payload);
+    return response.data;
+  };
+
   static startContest = async (payload: any) => {
     const response = await axios.post("/contest/start-contest", payload);
     return response.data;

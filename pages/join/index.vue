@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMutation } from '@tanstack/vue-query'
 import { useForm, Field } from 'vee-validate'
 import { defineProps } from 'vue'
 import * as yup from 'yup'
@@ -6,22 +7,40 @@ import { ContestApi } from '~/services'
 import { useContestStore } from '~/stores'
 
 const contestStore = useContestStore()
+const router = useRouter()
+const toast = useToast()
 
 const code = ref('')
 
+const findContestRequest = useMutation({
+  mutationFn: ContestApi.findContest,
+})
+
 const handleSubmit = async () => {
+  if (!code.value) {
+    return
+  }
   try {
-    // const joinResponse = await ContestApi.joinContest({
-    //   contestId: props?.contestId,
-    //   ...form.values,
-    // })
-    // contestStore.setPlayerIdByContestId(
-    //   props?.contestId,
-    //   joinResponse?.data?.id,
-    // )
+    const contestResponse = await findContestRequest.mutateAsync({
+      code: code.value,
+    })
+    const contestId = contestResponse?.data?.id
+
+    if (contestId) {
+      router.push({ path: `/contest/${contestId}/join` })
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: 'Không tim thấy cuộc thi!',
+        life: 3000,
+      })
+    }
   } catch (error) {
-    //
-    console.log(error)
+    toast.add({
+      severity: 'error',
+      summary: 'Không tim thấy cuộc thi!',
+      life: 3000,
+    })
   }
 }
 </script>

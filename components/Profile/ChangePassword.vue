@@ -7,12 +7,17 @@ import { useForm, Form, Field } from 'vee-validate'
 import * as yup from 'yup'
 import { useAuthStore } from '~/stores'
 
+const toast = useToast()
 const authStore = useAuthStore()
 
 const updateQuestionSchema = yup.object({
-  oldPassword: yup.string().trim().required('Trường này không được bỏ trống'),
-  newPassword: yup.string().trim().required('Trường này không được bỏ trống'),
-  reNewPassword: yup.string().trim().required('Trường này không được bỏ trống'),
+  oldPassword: yup.string().trim().required('Trường này là bắt buộc'),
+  newPassword: yup.string().trim().required('Trường này là bắt buộc'),
+  reNewPassword: yup
+    .string()
+    .trim()
+    .required('Trường này là bắt buộc')
+    .oneOf([yup.ref('newPassword')], 'Mật khẩu chưa khớp'),
 })
 
 // const route = useRoute();
@@ -33,30 +38,28 @@ const selectedCountry = ref()
 
 const router = useRouter()
 
-const loading = ref(false)
-
 const onSubmit = form.handleSubmit(async ({ ...values }) => {
-  // Simulates a 2 second delay
-  console.log('Submitted', values)
-  if (values?.image instanceof File) {
-    const uploadResponse = await UploadApi.uploadImage({
-      file: values?.image,
-      path: 'user/quiz/',
-    })
-    values.image = uploadResponse?.url
-  }
   try {
-    const updateQuizResponse = await QuizApi.updateQuiz({
-      name: values?.name,
-      image: values?.image,
-      questions: values?.questions,
-      categories: values?.categories,
-      visibility: values?.visibility ? 1 : 0,
-      status: values?.status ? 1 : 0,
+    await AuthApi.changePassword({
+      oldPassword: values?.oldPassword,
+      newPassword: values?.newPassword,
     })
-  } catch (error) {
-    console.log('updateQuiz', error)
-    //
+
+    form.resetForm()
+
+    toast.add({
+      severity: 'success',
+      summary: 'Đổi thông thành công!',
+      life: 3000,
+    })
+  } catch (error: any) {
+    if (error?.message) {
+      toast.add({
+        severity: 'error',
+        summary: error?.message,
+        life: 3000,
+      })
+    }
   }
 })
 </script>
@@ -69,7 +72,7 @@ const onSubmit = form.handleSubmit(async ({ ...values }) => {
         <div class="space-y-[4px]">
           <Field name="oldPassword" v-slot="{ field, errorMessage }">
             <label class="font-semibold">Mật khẩu cũ</label>
-            <InputText type="text" class="block w-full" v-bind="field" />
+            <InputText type="password" class="block w-full" v-bind="field" />
             <p v-if="errorMessage" class="text-[12px] text-red-600">
               {{ errorMessage }}
             </p>
@@ -78,7 +81,7 @@ const onSubmit = form.handleSubmit(async ({ ...values }) => {
         <div class="space-y-[4px]">
           <Field name="newPassword" v-slot="{ field, errorMessage }">
             <label class="font-semibold">Mật khẩu mới</label>
-            <InputText type="text" class="block w-full" v-bind="field" />
+            <InputText type="password" class="block w-full" v-bind="field" />
             <p v-if="errorMessage" class="text-[12px] text-red-600">
               {{ errorMessage }}
             </p>
@@ -87,7 +90,7 @@ const onSubmit = form.handleSubmit(async ({ ...values }) => {
         <div class="space-y-[4px]">
           <Field name="reNewPassword" v-slot="{ field, errorMessage }">
             <label class="font-semibold">Nhập lại mật khẩu mới</label>
-            <InputText type="text" class="block w-full" v-bind="field" />
+            <InputText type="password" class="block w-full" v-bind="field" />
             <p v-if="errorMessage" class="text-[12px] text-red-600">
               {{ errorMessage }}
             </p>
@@ -96,7 +99,7 @@ const onSubmit = form.handleSubmit(async ({ ...values }) => {
       </div>
     </div>
     <div class="mt-[24px] flex justify-end">
-      <Button label="Submit" type="submit">
+      <Button :loading="form?.isSubmitting?.value" label="Submit" type="submit">
         {{ form?.isSubmitting?.value ? 'Đang lưu...' : 'Lưu' }}
       </Button>
     </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { ref, defineProps } from 'vue'
-import { QuizApi } from '~/services'
+import { AuthApi, QuizApi } from '~/services'
 import { IoEyeOutline } from 'oh-vue-icons/icons'
 import { useForm, Form, Field } from 'vee-validate'
 import * as yup from 'yup'
@@ -20,7 +20,9 @@ const validationSchema = yup.object({
 
 interface IValidationSchema extends yup.Asserts<typeof validationSchema> {}
 
-interface IProps {}
+interface IProps {
+  email?: string
+}
 
 interface IEmits {
   (eventName: 'submit', email: string): void
@@ -29,25 +31,38 @@ interface IEmits {
 const props = defineProps<IProps>()
 const emit = defineEmits<IEmits>()
 
+const sendOtpRequest = useMutation({
+  mutationFn: AuthApi.forgotPassword,
+})
+
 const form = useForm<IValidationSchema>({
   validationSchema: validationSchema,
+  initialValues: {
+    email: props?.email || '',
+  },
 })
 const { errors, values, setFieldValue } = toRefs(form)
 
-const handleSubmit = form.handleSubmit(
-  (values: IValidationSchema) => {
-    console.log('sublit')
-    console.log(errors?.value, values)
-    emit('submit', values?.email)
-  },
-  () => {
-    console.log('errs')
-    console.log(errors?.value, values?.value?.email)
-  },
-)
+const handleSubmit = form.handleSubmit(async (values: IValidationSchema) => {
+  try {
+    const loginResponse = await sendOtpRequest.mutateAsync({
+      email: values.email,
+    })
 
-watchEffect(() => {
-  console.log(errors?.value, values?.value?.email)
+    const token = loginResponse?.access_token
+
+    localStorage.setItem('quiz-token', token)
+
+    emit('submit', values?.email)
+  } catch (error: any) {
+    if (error?.message) {
+      toast.add({
+        severity: 'error',
+        summary: error?.message,
+        life: 3000,
+      })
+    }
+  }
 })
 </script>
 
@@ -70,6 +85,11 @@ watchEffect(() => {
       </div>
     </Field>
 
-    <Button type="submit" label="Tiếp tục" class="w-full text-xl" />
+    <Button
+      :loading="sendOtpRequest.isPending.value"
+      type="submit"
+      label="Tiếp tục"
+      class="w-full text-xl"
+    />
   </form>
 </template>

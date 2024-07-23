@@ -4,18 +4,26 @@ import { ref } from 'vue'
 import { QuizApi } from '~/services'
 import { IoEyeOutline } from 'oh-vue-icons/icons'
 import dayjs from 'dayjs'
-import { EUserRole } from '~/common/enum/entity'
+import { EUserRole, EQuizStatus } from '~/common/enum/entity'
 import { useAuthStore } from '~/stores'
 
 const confirm = useConfirm()
 const authStore = useAuthStore()
+const debounce = createDebounce()
 
 const profile = computed(() => authStore?.profile)
 
+const search = ref('')
+const page = ref(1)
+
 // Query
 const getQuizListRequest = useQuery({
-  queryKey: ['quiz-list'],
-  queryFn: () => QuizApi.getListQuiz({}),
+  queryKey: ['quiz-list', search, page],
+  queryFn: () =>
+    QuizApi.getListQuiz({
+      search: search.value,
+      page: page.value,
+    }),
 })
 
 const createQuizRequest = useMutation({
@@ -26,10 +34,6 @@ const quizzes = computed(() => getQuizListRequest?.data?.value?.data || [])
 const total = computed(() => getQuizListRequest?.data?.value?.total || 0)
 const { isPending, isSuccess, isError, data, error, refetch } =
   toRefs(getQuizListRequest)
-
-watchEffect(() => {
-  console.log(isPending, isError, data, error)
-})
 
 const router = useRouter()
 
@@ -67,7 +71,7 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-white p-[16px]">
+  <div class="min-h-[600px] rounded-[8px] bg-white p-[16px]">
     <div class="flex items-center justify-between">
       <h2 class="text-[40px] font-bold">Danh sách Quiz</h2>
       <Button
@@ -77,14 +81,18 @@ definePageMeta({
         @click="handleCreateQuiz()"
       />
     </div>
+    <div class="mt-[32px] flex justify-end">
+      <IconField iconPosition="left">
+        <InputIcon class="pi pi-search"> </InputIcon>
+        <InputText
+          @input="(e) => debounce(() => (search = e.target?.value))"
+          icon="pi-search"
+          placeholder="Tìm kiếm"
+        />
+      </IconField>
+    </div>
     <span v-if="isPending">Loading...</span>
-    <div v-if="isSuccess" class="mt-[32px]">
-      <div class="flex justify-end">
-        <IconField iconPosition="left">
-          <InputIcon class="pi pi-search"> </InputIcon>
-          <InputText icon="pi-search" placeholder="Tìm kiếm" />
-        </IconField>
-      </div>
+    <div v-if="isSuccess" class="">
       <div class="divide-y divide-slate-200">
         <div
           v-for="quiz of quizzes || []"
@@ -92,16 +100,19 @@ definePageMeta({
           class="mt-[20px] flex justify-between py-[16px]"
         >
           <img
-            src="https://picsum.photos/400/400?random=1"
+            :src="quiz?.image"
             alt=""
-            class="w-[100px]"
+            class="h-[100px] w-[100px] object-cover"
+            @error="
+              (e) => (e.target.src = 'https://picsum.photos/400/400?random=1')
+            "
           />
           <div class="flex w-[calc(100%-100px-100px-16px*2)] flex-col">
             <h3
               v-tooltip.top="quiz?.name"
               class="line-clamp-1 max-w-[500px] font-semibold"
             >
-              {{ quiz?.name }}
+              {{ quiz?.name || 'Untitle' }}
             </h3>
             <div class="mt-[4px] text-[14px] text-slate-600">
               <span>{{ quiz?.questions?.length || 0 }} câu hỏi</span>
@@ -115,7 +126,10 @@ definePageMeta({
             v-if="profile?.role === EUserRole.User"
             class="flex w-[100px] items-end justify-end space-x-[16px] whitespace-nowrap"
           >
-            <NuxtLink :to="`/dashboard/quiz/${quiz?.id}`">
+            <NuxtLink
+              v-if="quiz?.status === EQuizStatus.Published"
+              :to="`/dashboard/quiz/${quiz?.id}`"
+            >
               <span
                 class="pi pi-eye cursor-pointer text-[20px] text-primary"
               ></span>
@@ -134,7 +148,10 @@ definePageMeta({
             v-if="profile?.role === EUserRole.Admin"
             class="flex w-[100px] items-end justify-end space-x-[16px] whitespace-nowrap"
           >
-            <NuxtLink :to="`/dashboard/quiz/${quiz?.id}`">
+            <NuxtLink
+              v-if="quiz?.status === EQuizStatus.Published"
+              :to="`/dashboard/quiz/${quiz?.id}`"
+            >
               <span
                 class="pi pi-eye cursor-pointer text-[20px] text-primary"
               ></span>
@@ -148,10 +165,11 @@ definePageMeta({
       </div>
     </div>
     <Paginator
-      v-if="!!total"
+      :alwaysShow="false"
       :rows="10"
       :totalRecords="total"
       class="mt-[24px]"
+      @page="(e) => (page = e.page + 1)"
     />
   </div>
   <ConfirmDialog></ConfirmDialog>

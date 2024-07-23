@@ -5,6 +5,9 @@ import { QuizApi, CategoryApi, UploadApi } from '~/services'
 import { IoEyeOutline } from 'oh-vue-icons/icons'
 import { useForm, Form, Field } from 'vee-validate'
 import * as yup from 'yup'
+import { EQuizStatus } from '~/common/enum/entity'
+
+const toast = useToast()
 
 const updateQuestionSchema = yup.object({
   id: yup.number().nullable().optional(),
@@ -75,7 +78,6 @@ const router = useRouter()
 const loading = ref(false)
 
 const onSubmit = form.handleSubmit(async ({ ...values }) => {
-  console.log('Submitted', values)
   if (values?.image instanceof File) {
     const uploadResponse = await UploadApi.uploadImage({
       file: values?.image,
@@ -91,15 +93,28 @@ const onSubmit = form.handleSubmit(async ({ ...values }) => {
       questions: values?.questions,
       categories: values?.categories,
       visibility: values?.visibility ? 1 : 0,
-      status: 1,
+      status: EQuizStatus.Published,
     })
-  } catch (error) {
+
+    toast.add({
+      severity: 'success',
+      summary: 'Đã lưu quiz!',
+      life: 3000,
+    })
+
+  } catch (error: any) {
     console.log('updateQuiz', error)
-    //
+    if (error?.message) {
+      toast.add({
+        severity: 'error',
+        summary: error?.message,
+        life: 3000,
+      })
+    }
   }
 })
 
-const onSubmitAsDraft = form.handleSubmit(async ({ ...values }) => {
+const onSubmitAsDraft = async ({ ...values }) => {
   console.log('Submitted', values)
   if (values?.image instanceof File) {
     const uploadResponse = await UploadApi.uploadImage({
@@ -113,16 +128,29 @@ const onSubmitAsDraft = form.handleSubmit(async ({ ...values }) => {
       id: props.quizId,
       name: values?.name,
       image: values?.image,
-      questions: values?.questions,
-      categories: values?.categories,
+      questions: values?.questions || [],
+      categories: values?.categories || [],
       visibility: values?.visibility ? 1 : 0,
-      status: 0,
+      status: EQuizStatus.Draft,
     })
-  } catch (error) {
+
+    toast.add({
+      severity: 'success',
+      summary: 'Đã lưu quiz!',
+      life: 3000,
+    })
+
+  } catch (error: any) {
     console.log('updateQuiz', error)
-    //
+    if (error?.message) {
+      toast.add({
+        severity: 'error',
+        summary: error?.message,
+        life: 3000,
+      })
+    }
   }
-})
+}
 
 const handleSubmitQuestionFormDialog = (question: any) => {
   const questions = toRaw(form.values?.questions) || []
@@ -279,12 +307,7 @@ const handleRemoveCategory = (categoryId: any) => {
         />
       </div>
       <div class="mt-[24px] flex justify-end space-x-[16px]">
-        <Button
-          label="Submit"
-          type="button"
-          outlined
-          @click="onSubmitAsDraft"
-        >
+        <Button label="Submit" type="button" outlined @click="onSubmitAsDraft">
           {{ form?.isSubmitting?.value ? 'Đang lưu...' : 'Lưu dạng nháp' }}
         </Button>
         <Button label="Submit" type="submit">

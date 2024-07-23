@@ -5,8 +5,25 @@ export class AuthApi {
     const response = await axios.post('/auth/login', payload)
     return response.data
   }
-  static register = async (payload: { username: string; password: string }) => {
+  static register = async (payload: {
+    username: string
+    password: string
+    name: string
+    email: string
+  }) => {
     const response = await axios.post('/auth/register', payload)
+    return response.data
+  }
+  static forgotPassword = async (payload: { email: string }) => {
+    const response = await axios.post('/auth/forgot-password', payload)
+    return response.data
+  }
+  static forgotPasswordVerify = async (payload: {
+    otp: string
+    password: string
+    email: string
+  }) => {
+    const response = await axios.post('/auth/forgot-password-verify', payload)
     return response.data
   }
   static getProfile = async () => {
@@ -18,7 +35,7 @@ export class AuthApi {
     return response.data
   }
   static changePassword = async (payload: any) => {
-    const response = await axios.get('/auth/change-password', payload)
+    const response = await axios.post('/auth/change-password', payload)
     return response.data
   }
 }

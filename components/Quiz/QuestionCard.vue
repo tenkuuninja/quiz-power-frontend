@@ -38,7 +38,7 @@ const questionType =
 
 <template>
   <div
-    :key="question?.id || i"
+    :key="question?.id"
     :class="
       cn(
         'cursor-pointer rounded-[8px] border border-slate-200 p-[16px] text-black',

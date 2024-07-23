@@ -7,21 +7,16 @@ import { useForm, Form, Field } from 'vee-validate'
 import * as yup from 'yup'
 import { useAuthStore } from '~/stores'
 import { EUserRole } from '~/common/enum/entity'
+import copy from 'copy-to-clipboard'
 
+const toast = useToast()
 const authStore = useAuthStore()
 
 const profile = computed(() => authStore?.profile)
-
-const updateQuestionSchema = yup.object({
-  id: yup.number().nullable().optional(),
-  name: yup.string().trim().required('This field is required'),
-  status: yup.boolean().nullable().optional(),
-  visibility: yup.boolean().nullable().optional(),
-  categories: yup.array().min(1, 'Tối thiểu 1 danh mục').optional(),
-})
+const openCreateContestDialog = ref(false)
 
 interface IUpdateFormProps {
-  quizId: number
+  quiz: any
 }
 
 interface IUpdateFormEmits {
@@ -30,24 +25,44 @@ interface IUpdateFormEmits {
 
 const props = defineProps<IUpdateFormProps>()
 const emit = defineEmits<IUpdateFormEmits>()
+const quiz = computed(() => props?.quiz)
 
-const { quizId } = props
-
-const router = useRouter()
-const openCreateContestDialog = ref(false)
-
-const loading = ref(false)
-
-const quizDetailRequest = useQuery({
-  queryKey: ['quiz-detail', ['quiz-detail', quizId].join('-')],
-  queryFn: async () => {
-    const response = await QuizApi.getDetailQuiz({ id: quizId })
-
-    return response
-  },
+const exportQuizRequest = useMutation({
+  mutationFn: QuizApi.exportPdf,
 })
 
-const quiz = computed(() => quizDetailRequest?.data?.value?.data)
+const handleCopyLink = async () => {
+  const origin = window.location.origin
+  copy(origin + '/quiz/' + quiz?.value?.id)
+
+  toast.add({
+    severity: 'success',
+    summary: 'Đã sao chép đường dẫn!',
+    life: 3000,
+  })
+}
+
+const handleExportPdf = async () => {
+  try {
+    const response = await exportQuizRequest.mutateAsync({
+      id: quiz?.value?.id,
+    })
+
+    const blob = new Blob([new Uint8Array(response?.data?.data)], {
+      type: 'application/octet-stream',
+    })
+
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '[QuizPower]-' + quiz.value.name + '-' + Date.now() + '.pdf'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  } catch (error) {
+    console.error('handleExportPdf', error)
+  }
+}
 
 const handleCreateContest = async () => {
   openCreateContestDialog.value = true
@@ -55,8 +70,7 @@ const handleCreateContest = async () => {
 </script>
 
 <template>
-  <span v-if="quizDetailRequest.isPending?.value" class="">Loading...</span>
-  <div v-if="quizDetailRequest.isSuccess?.value" class="">
+  <div class="">
     <h1 class="text-[20px] font-bold">{{ quiz?.name }}</h1>
     <div class="mt-[16px] flex flex-wrap gap-[4px]">
       <Chip
@@ -74,14 +88,15 @@ const handleCreateContest = async () => {
         class="rounded-full"
       />
       <Button
-        @click="handleCreateContest()"
+        :loading="exportQuizRequest?.isPending?.value"
+        @click="handleExportPdf()"
         outlined
         label="Xuất câu hỏi"
         icon="pi pi-file-pdf"
         class="rounded-full"
       />
       <Button
-        @click="handleCreateContest()"
+        @click="handleCopyLink()"
         outlined
         label="Chia sẻ"
         icon="pi pi-share-alt"
@@ -93,18 +108,12 @@ const handleCreateContest = async () => {
         v-for="(question, i) in quiz?.questions"
         :question="question"
         :key="question?.id || i"
-        @click="
-          () => {
-            openQuestion = true
-            questionToUpdate = question
-          }
-        "
       />
     </div>
   </div>
   <QuizCreateContestDialog
     :open="openCreateContestDialog"
-    :quizId="quizId"
+    :quizId="quiz.id"
     :onClose="
       () => {
         openCreateContestDialog = false

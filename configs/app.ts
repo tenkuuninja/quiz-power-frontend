@@ -1,2 +1,3 @@
-export const API_URL = process.env['NUXT_PUBLIC_API_URL'] || 'https://quiz-power-backend.onrender.com'
+export const API_URL = 'https://quiz-power-backend.onrender.com'
+// export const API_URL = 'http://localhost:4001'
 

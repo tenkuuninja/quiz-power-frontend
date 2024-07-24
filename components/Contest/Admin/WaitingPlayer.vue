@@ -5,7 +5,6 @@ import { ContestApi, QuizApi } from '~/services'
 import { IoEyeOutline } from 'oh-vue-icons/icons'
 import { useForm, Form, Field } from 'vee-validate'
 import * as yup from 'yup'
-import { BASE_URL } from '~/common/constants/app'
 import { useContestStore } from '~/stores'
 import copy from 'copy-to-clipboard'
 import { useToast } from 'primevue/usetoast'
@@ -47,8 +46,23 @@ const handleSubmit = async () => {
   }
 }
 
-const handleCopy = async (text: string) => {
-  copy(text, {
+const handleCopyLink = async () => {
+  const origin = window.location.origin
+  copy(`${origin}/contest/${contest?.value?.id}/join`, {
+    message: 'copied',
+  })
+
+  // toast.info("Copied");
+
+  toast.add({
+    severity: 'info',
+    summary: 'Copied',
+    life: 3000,
+  })
+}
+
+const handleCopyCode = async () => {
+  copy(contest?.value?.joinCode, {
     message: 'copied',
   })
 
@@ -64,16 +78,18 @@ const handleCopy = async (text: string) => {
 
 <template>
   <div class="py-4">
-    <h2 class="text-center text-[40px] font-medium mt-[20px]">{{ contest?.name }}</h2>
+    <h2 class="mt-[20px] text-center text-[40px] font-medium">
+      {{ contest?.name }}
+    </h2>
     <div
-      class="mx-auto max-w-[500px] mt-[32px] rounded-[8px] border border-slate-700 bg-black/80 p-[16px] text-slate-50"
+      class="mx-auto mt-[32px] max-w-[500px] rounded-[8px] border border-slate-700 bg-black/80 p-[16px] text-slate-50"
     >
       <div class="flex items-center justify-between space-x-[16px]">
         <span class="w-[80px]">Join link</span>
         <span class="text-[32px] font-bold">quizpower.com/join</span>
         <button
           class="pi pi-clone text-[20px] text-white"
-          @click="handleCopy(`${BASE_URL}/contest/${contest?.id}/join`)"
+          @click="handleCopyLink"
         ></button>
       </div>
       <div class="mt-[20px] flex items-center justify-between space-x-[16px]">
@@ -83,7 +99,7 @@ const handleCopy = async (text: string) => {
         </span>
         <button
           class="pi pi-clone text-[20px] text-white"
-          @click="handleCopy(contest?.joinCode)"
+          @click="handleCopyCode"
         ></button>
       </div>
     </div>

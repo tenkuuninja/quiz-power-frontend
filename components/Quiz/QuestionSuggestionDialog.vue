@@ -53,7 +53,8 @@ const suggestQuestionRequest = useMutation({
 const handleSuggestQuestion = form.handleSubmit(async (values) => {
   try {
     const suggestResponse = await suggestQuestionRequest.mutateAsync({
-      ...values,
+      message: values?.message,
+      totalQuestion: +values?.totalQuestion,
     })
     questions.value = (suggestResponse?.data || [])?.map((question: any) => ({
       ...question,

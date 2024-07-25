@@ -31,6 +31,7 @@ const contestStore = useContestStore()
 const { contestId } = toRefs(props)
 
 const contest = computed(() => contestStore?.getContest(contestId.value))
+const playerId = computed(() => contestStore?.getPlayerId(contestId.value))
 const sortedPlayers = computed(() => {
   const players = [...contest?.value?.players]
   players.sort((p1: any, p2: any) => {
@@ -61,12 +62,10 @@ const handleSubmit = async () => {
     >
       <div>
         <div class="flex items-center justify-between pb-[8px] font-bold">
-          <div class="w-[60px] text-center">Rank</div>
-          <div class="w-[400px]">Player</div>
-          <div class="w-[100px] text-center">Score</div>
-          <div class="w-[calc(100%-60px-400px-100px-16px*3)] text-center">
-            Steak
-          </div>
+          <div class="w-[60px] text-center">Hạng</div>
+          <div class="w-[400px]">Người tham gia</div>
+          <div class="w-[100px] text-center">Điểm</div>
+          <div class="w-[calc(100%-60px-400px-100px-16px*3)] text-center"></div>
         </div>
         <div class="divide-y divide-slate-400">
           <div
@@ -74,7 +73,16 @@ const handleSubmit = async () => {
             :key="player?.id"
             class="flex items-center justify-between py-[16px]"
           >
-            <div class="w-[60px] text-center">{{ i + 1 }}</div>
+            <div
+              :class="
+                cn(
+                  'w-[60px] text-center',
+                  playerId === player?.id && 'text-primary',
+                )
+              "
+            >
+              {{ i + 1 }}
+            </div>
             <div class="w-[400px]">
               <div class="flex items-center">
                 <img
@@ -82,12 +90,28 @@ const handleSubmit = async () => {
                   alt=""
                   class="mt-[-6px] w-[32px]"
                 />
-                <p class="ml-[12px] pr-[12px] text-[20px] font-bold">
+                <p
+                  :class="
+                    cn(
+                      'ml-[12px] pr-[12px] text-[20px] font-bold',
+                      playerId === player?.id && 'text-primary',
+                    )
+                  "
+                >
                   {{ player?.name }}
                 </p>
               </div>
             </div>
-            <div class="w-[100px] text-center">{{ player?.score }}</div>
+            <div
+              :class="
+                cn(
+                  'w-[100px] text-center',
+                  playerId === player?.id && 'text-primary',
+                )
+              "
+            >
+              {{ player?.score }}
+            </div>
             <div
               class="relative flex w-[calc(100%-60px-400px-100px-16px*3)] overflow-hidden rounded-[8px] bg-slate-700/50 text-center"
             >

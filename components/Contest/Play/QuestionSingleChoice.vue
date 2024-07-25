@@ -33,7 +33,7 @@ const form = useForm({
 })
 
 const { contestId } = toRefs(props)
-const questionId = computed(() => props.question)
+const questionId = computed(() => props.question?.id)
 const selectedOptions = ref([] as any[])
 const startedAt = ref(dayjs().toISOString())
 const submitted = ref(false)

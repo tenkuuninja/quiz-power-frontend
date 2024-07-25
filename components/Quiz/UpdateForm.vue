@@ -101,7 +101,6 @@ const onSubmit = form.handleSubmit(async ({ ...values }) => {
       summary: 'Đã lưu quiz!',
       life: 3000,
     })
-
   } catch (error: any) {
     console.log('updateQuiz', error)
     if (error?.message) {
@@ -139,7 +138,6 @@ const onSubmitAsDraft = async ({ ...values }) => {
       summary: 'Đã lưu quiz!',
       life: 3000,
     })
-
   } catch (error: any) {
     console.log('updateQuiz', error)
     if (error?.message) {
@@ -195,6 +193,16 @@ const handleRemoveCategory = (categoryId: any) => {
     )
   }
 }
+
+const handleRemoveQuestion = (questionId: number) => {
+  const questions = toRaw(form.values?.questions) || []
+  if (questions) {
+    form.setFieldValue(
+      'questions',
+      questions?.filter((q: any) => q?.id !== questionId),
+    )
+  }
+}
 </script>
 
 <template>
@@ -217,7 +225,7 @@ const handleRemoveCategory = (categoryId: any) => {
         <div class="w-[50%] space-y-[16px]">
           <div class="space-y-[4px]">
             <Field name="name" v-slot="{ field, errorMessage }">
-              <label class="font-semibold">Name</label>
+              <label class="font-semibold">Tên</label>
               <InputText type="text" class="block w-full" v-bind="field" />
               <p v-if="errorMessage" class="text-[12px] text-red-600">
                 {{ errorMessage }}
@@ -226,12 +234,12 @@ const handleRemoveCategory = (categoryId: any) => {
           </div>
           <div class="space-y-[4px]">
             <Field name="categories" v-slot="{ errorMessage }">
-              <label class="font-semibold">Category</label>
+              <label class="font-semibold">Danh mịc</label>
               <Dropdown
                 :options="categories"
                 optionLabel="name"
                 optionValue="id"
-                placeholder="Select a City"
+                placeholder="Chọn danh mục"
                 class="w-full"
                 @change="(e) => handleSelectCategory(e.value)"
               />
@@ -294,17 +302,26 @@ const handleRemoveCategory = (categoryId: any) => {
         </button>
       </div>
       <div class="mt-[24px] space-y-[16px]">
-        <QuizQuestionCard
+        <div
           v-for="(question, i) in questions"
-          :question="question"
           :key="question?.id || i"
-          @click="
-            () => {
-              openQuestion = true
-              questionToUpdate = question
-            }
-          "
-        />
+          class="relative"
+        >
+          <QuizQuestionCard
+            :question="question"
+            @click="
+              () => {
+                openQuestion = true
+                questionToUpdate = question
+              }
+            "
+          />
+          <button
+            class="pi pi-trash absolute right-[8px] top-[8px] cursor-pointer text-red-500"
+            @click="handleRemoveQuestion(question.id)"
+            type="button"
+          ></button>
+        </div>
       </div>
       <div class="mt-[24px] flex justify-end space-x-[16px]">
         <Button label="Submit" type="button" outlined @click="onSubmitAsDraft">

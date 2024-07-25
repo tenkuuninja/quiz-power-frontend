@@ -14,7 +14,7 @@ definePageMeta({
     <div class="flex justify-between items-center">
       <h2 class="text-[40px] font-bold">Chi tiết cuộc thi</h2>
       <NuxtLink to="/dashboard/quiz">
-        <Button label="Back" />
+        <Button label="Quay lại" />
       </NuxtLink>
     </div>
     <div class="mt-[32px]">

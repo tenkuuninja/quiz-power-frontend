@@ -11,8 +11,6 @@ const toast = useToast()
 const authStore = useAuthStore()
 
 const updateQuestionSchema = yup.object({
-  name: yup.string().trim().required('Tên không được bỏ trống'),
-  email: yup.string().trim().required('Tên không được bỏ trống'),
   avatar: yup.mixed(),
 })
 

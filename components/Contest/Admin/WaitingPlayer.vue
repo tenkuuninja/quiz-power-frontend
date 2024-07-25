@@ -85,7 +85,7 @@ const handleCopyCode = async () => {
       class="mx-auto mt-[32px] max-w-[500px] rounded-[8px] border border-slate-700 bg-black/80 p-[16px] text-slate-50"
     >
       <div class="flex items-center justify-between space-x-[16px]">
-        <span class="w-[80px]">Join link</span>
+        <span class="w-[80px]">Liên kết</span>
         <span class="text-[32px] font-bold">quizpower.com/join</span>
         <button
           class="pi pi-clone text-[20px] text-white"
@@ -93,7 +93,7 @@ const handleCopyCode = async () => {
         ></button>
       </div>
       <div class="mt-[20px] flex items-center justify-between space-x-[16px]">
-        <span class="w-[80px]">Enter code</span>
+        <span class="w-[80px]">Nhập mã</span>
         <span class="text-[52px] font-bold tracking-wider">
           {{ contest?.joinCode }}
         </span>
@@ -118,7 +118,7 @@ const handleCopyCode = async () => {
       <div
         class="mx-auto inline-flex items-center rounded-full border border-slate-800 bg-black/80 px-[32px] py-[12px] text-[24px] font-bold text-white"
       >
-        {{ contest?.players?.length || 0 }} Member Joined
+        {{ contest?.players?.length || 0 }} Người tham gia
       </div>
       <div class="mt-[20px] flex flex-wrap justify-center gap-[16px]">
         <div

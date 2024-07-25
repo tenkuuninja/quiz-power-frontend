@@ -29,6 +29,14 @@ onMounted(() => {
       v-if="contest?.contestQuiz?.questions?.length > player?.answers?.length"
       :contestId="contestId"
     />
+    <div
+      v-if="contest?.status !== 'Ended' && contest?.contestQuiz?.questions?.length === player?.answers?.length"
+      :contestId="contestId"
+      class="flex min-h-[calc(100vh-72px)] w-full flex-col items-center justify-center text-center"
+    >
+      <p class="text-[32px] font-bold">Đã hoàn thành!</p>
+      <p class="text-[20px]">Vui lòng chờ người tổ chức kết thúc cuộc thi!</p>
+    </div>
 
     <ContestAdminDashboardPlayerScore
       v-if="contest?.status === 'Ended'"

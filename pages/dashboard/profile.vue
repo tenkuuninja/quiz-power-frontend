@@ -18,10 +18,6 @@ const total = computed(() => getQuizListRequest?.data?.value?.total || 0)
 const { isPending, isSuccess, isError, data, error, refetch } =
   toRefs(getQuizListRequest)
 
-watchEffect(() => {
-  console.log(isPending, isError, data, error)
-})
-
 const router = useRouter()
 
 const loading = ref(false)

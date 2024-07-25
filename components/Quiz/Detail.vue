@@ -113,7 +113,7 @@ const handleCreateContest = async () => {
   </div>
   <QuizCreateContestDialog
     :open="openCreateContestDialog"
-    :quizId="quiz.id"
+    :quizId="quiz?.id"
     :onClose="
       () => {
         openCreateContestDialog = false

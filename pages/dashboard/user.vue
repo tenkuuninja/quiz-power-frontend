@@ -7,10 +7,17 @@ import dayjs from 'dayjs'
 
 const confirm = useConfirm()
 
+const search = ref('')
+const page = ref(1)
+
 // Query
 const getListUserRequest = useQuery({
-  queryKey: ['users'],
-  queryFn: () => UserApi.getListUser(),
+  queryKey: ['users', search, page],
+  queryFn: () =>
+    UserApi.getListUser({
+      search: search.value,
+      page: page.value,
+    }),
 })
 
 const users = computed(() => getListUserRequest?.data?.value?.data)
@@ -57,7 +64,11 @@ definePageMeta({
       <div class="flex justify-end">
         <IconField iconPosition="left">
           <InputIcon class="pi pi-search"> </InputIcon>
-          <InputText icon="pi-search" placeholder="Tìm kiếm" />
+          <InputText
+            icon="pi-search"
+            placeholder="Tìm kiếm"
+            @input="(e) => debounce(() => (search = e.target?.value))"
+          />
         </IconField>
       </div>
       <DataTable
@@ -108,10 +119,11 @@ definePageMeta({
         </Column>
       </DataTable>
       <Paginator
-        v-if="!!total"
+        :alwaysShow="false"
         :rows="10"
         :totalRecords="total"
         class="mt-[24px]"
+        @page="(e) => (page = e.page + 1)"
       />
     </div>
   </div>

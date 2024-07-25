@@ -38,7 +38,6 @@ definePageMeta({
   <div class="min-h-[600px] rounded-[8px] bg-white p-[16px]">
     <div class="flex items-center justify-between">
       <h2 class="text-[40px] font-bold">Danh sách cuộc thi</h2>
-      <Button label="Add" @click="handleCreateQuiz()" />
     </div>
     <div class="mt-[32px] flex justify-end">
       <IconField iconPosition="left">
